@@ -363,43 +363,141 @@
   <p class="empty" id="empty" hidden>No videos found.</p>
 </section>
 
+<div class="watch-page" id="watchPage">
+
+  <div class="watch-header">
+    <div class="watch-logo">VYRA.</div>
+    <button class="close-watch" onclick="closeWatch()">
+      ✕ Back to explore
+    </button>
+  </div>
+
+  <div class="player-container">
+
+    <video id="videoPlayer" controls playsinline>
+      Your browser does not support video playback.
+    </video>
+
+    <div class="watch-info">
+      <small id="watchCategory">VIDEO</small>
+      <h1 id="watchTitle">Video title</h1>
+      <p id="watchDescription">Video description</p>
+    </div>
+
+    <div class="recommendations">
+      <h2>More to explore</h2>
+      <div class="grid" id="recommendedVideos"></div>
+    </div>
+
+  </div>
+</div>
+
 <footer id="about">
   VYRA © 2026 — Discover Something New.
 </footer>
 
 <script>
-  const buttons = document.querySelectorAll('.category');
-  const cards = document.querySelectorAll('.card');
-  const search = document.getElementById('search');
-  let selected = 'all';
 
-  function filterVideos() {
-    let count = 0;
-    cards.forEach(card => {
-      const category = card.dataset.category;
-      const matchesCategory =
-        selected === 'all' || category === selected;
-      const matchesSearch =
-        card.innerText.toLowerCase().includes(search.value.toLowerCase());
+const buttons = document.querySelectorAll('.category');
+const cards = document.querySelectorAll('.card');
+const search = document.getElementById('search');
 
-      card.style.display =
-        matchesCategory && matchesSearch ? '' : 'none';
+let selected = 'all';
 
-      if (matchesCategory && matchesSearch) count++;
-    });
-    document.getElementById('empty').hidden = count !== 0;
-  }
+const demoVideo =
+  'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
 
-  buttons.forEach(button => {
-    button.addEventListener('click', () => {
-      buttons.forEach(b => b.classList.remove('active'));
-      button.classList.add('active');
-      selected = button.dataset.category;
-      filterVideos();
-    });
+function filterVideos() {
+  let count = 0;
+
+  cards.forEach(card => {
+    const matchesCategory =
+      selected === 'all' ||
+      card.dataset.category === selected;
+
+    const matchesSearch =
+      card.innerText.toLowerCase()
+        .includes(search.value.toLowerCase());
+
+    card.style.display =
+      matchesCategory && matchesSearch ? '' : 'none';
+
+    if (matchesCategory && matchesSearch) count++;
   });
 
-  search.addEventListener('input', filterVideos);
+  document.getElementById('empty').hidden = count !== 0;
+}
+
+buttons.forEach(button => {
+  button.addEventListener('click', () => {
+    buttons.forEach(b => b.classList.remove('active'));
+    button.classList.add('active');
+
+    selected = button.dataset.category;
+    filterVideos();
+  });
+});
+
+search.addEventListener('input', filterVideos);
+
+// OPEN WATCH PAGE
+
+function openWatch(card) {
+  const title = card.querySelector('h3').innerText;
+  const category = card.querySelector('small').innerText;
+  const description = card.querySelector('p').innerText;
+
+  const player = document.getElementById('videoPlayer');
+
+  document.getElementById('watchTitle').innerText = title;
+  document.getElementById('watchCategory').innerText = category;
+  document.getElementById('watchDescription').innerText = description;
+
+  const recommendations =
+    document.getElementById('recommendedVideos');
+
+  recommendations.innerHTML = '';
+
+  cards.forEach(other => {
+    if (other === card) return;
+
+    const copy = other.cloneNode(true);
+    copy.style.display = '';
+    copy.addEventListener('click', () => openWatch(other));
+
+    recommendations.appendChild(copy);
+  });
+
+  player.src = demoVideo;
+
+  document.getElementById('watchPage').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  player.play().catch(() => {
+    // User can press play manually.
+  });
+}
+
+// CLOSE WATCH PAGE
+
+function closeWatch() {
+  const player = document.getElementById('videoPlayer');
+
+  player.pause();
+  player.removeAttribute('src');
+  player.load();
+
+  document.getElementById('watchPage').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// MAKE VIDEO CARDS CLICKABLE
+
+cards.forEach(card => {
+  card.style.cursor = 'pointer';
+  card.addEventListener('click', () => openWatch(card));
+});
+
 </script>
 
 </body>
